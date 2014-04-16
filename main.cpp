@@ -5,6 +5,7 @@
 #include <QTextStream>
 #include <QString>
 #include <QDebug>
+#include <QDateTime>
 
 QString GetRandomString();
 
@@ -29,8 +30,9 @@ int main(int argc, char *argv[])
     bool printPasswords = true;
     bool printHash      = true;
 
-    if (!fStore.open(QIODevice::WriteOnly | QIODevice::Text))
+    if (!fStore.open(QIODevice::WriteOnly | QIODevice::Text)) {
              return 1;
+    }
     else {
         QTextStream fStream(&fStore);
         if(printPasswords || printHash)
@@ -66,9 +68,10 @@ QString GetRandomString()
 {
    const QString possibleCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
    const int randomStringLength = 12;
-
+   QTime time = QTime::currentTime();
+   qsrand(time.msec());
    QString randomString;
-   for(int i=0; i<randomStringLength; ++i)
+   for(uint i=0; i<randomStringLength; ++i)
    {
        int index = qrand() % possibleCharacters.length();
        QChar nextChar = possibleCharacters.at(index);
