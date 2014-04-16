@@ -7,7 +7,7 @@
 #include <QDebug>
 #include <QDateTime>
 
-QString GetRandomString();
+QString GetRandomString(uint len);
 
 // Example output:
 /*
@@ -30,6 +30,11 @@ int main(int argc, char *argv[])
     bool printPasswords = true;
     bool printHash      = true;
 
+    bool generateSalt   = true;
+
+    uint saltLen = 6;
+    uint passLen = 12;
+
     if (!fStore.open(QIODevice::WriteOnly | QIODevice::Text)) {
              return 1;
     }
@@ -38,11 +43,16 @@ int main(int argc, char *argv[])
         if(printPasswords || printHash)
             qDebug() << "Randomly generated password for: \n";
 
+        // Pass_ID | Acc_ID | PwHash | PwSalt
         for(unsigned int i=1; i<= accounts; i++)
         {
-            QString randomPassword = GetRandomString();
+            QString randomPassword = GetRandomString(passLen);
+            QString randomSalt="";
 
-            qSHA3.addData(GetRandomString().toUtf8());
+            if(generateSalt)
+                randomSalt = GetRandomString(saltLen);
+
+            qSHA3.addData(QString(randomPassword + randomSalt).toUtf8());
 
             if(printPasswords)
                 qDebug() << "User: " << i << '\n'
@@ -52,9 +62,11 @@ int main(int argc, char *argv[])
                 qDebug() << "Hash: " << qSHA3.result().toHex() << '\n';
 
             if(i<accounts)
-                fStream << i << '|' << qSHA3.result().toHex() << "|\n";
+                fStream << i << '|' << i << '|' << qSHA3.result().toHex() << '|' << randomSalt << "|\n";
+                //fStream << i << '|' << i << '|' << GetRandomString(8) << "|\n";
             else
-                fStream << i << '|' << qSHA3.result().toHex();
+                fStream << i << '|' << i << '|' << qSHA3.result().toHex() << '|' << randomSalt;
+                //fStream << i << '|' << i << '|' << GetRandomString(8);
             qSHA3.reset();
         }
 
@@ -64,10 +76,10 @@ int main(int argc, char *argv[])
     return a.exec();
 }
 
-QString GetRandomString()
+QString GetRandomString(uint length)
 {
    const QString possibleCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
-   const int randomStringLength = 12;
+   uint randomStringLength = length;
    QTime time = QTime::currentTime();
    qsrand(time.msec());
    QString randomString;
